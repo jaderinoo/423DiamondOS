@@ -1,0 +1,275 @@
+     1                                  	;bit16					; 16bit by default
+     2                                  	org 0x7c00
+     3 00000000 EB01                    	jmp short start
+     4 00000002 90                      	nop
+     5                                  
+     6                                  start:
+     7                                  	
+     8                                  ;;clearscreen			WIPES THE SCREEN CLEAN
+     9 00000003 B406                    	mov ah,06h		
+    10 00000005 B000                    	mov al,0		
+    11 00000007 B77C                    	mov bh,7ch		;color profile 
+    12 00000009 B500                    	mov ch,0			;zeros the available spaces
+    13 0000000B B100                    	mov cl,0		
+    14 0000000D B618                    	mov dh,24		
+    15 0000000F B24F                    	mov dl,79		
+    16 00000011 CD10                    	int 10h				;interrupt
+    17                                  
+    18                                  ;;printHello			PRINTS THE WELCOME MESSAGE
+    19 00000013 B413                    	mov ah,13h		;Function 13h (display string)
+    20 00000015 B001                    	mov al,1			;Write mode is zero: cursor stay after last char
+    21 00000017 B700                    	mov bh,0			;Use video page of zero
+    22 00000019 B37E                    	mov bl,7eh		;Attribute (lightgreen on black)
+    23 0000001B B94600                  	mov cx,mlen		;Character string length
+    24 0000001E B600                    	mov dh,0			;Position on row 0
+    25 00000020 B200                    	mov dl,0			;And column 0
+    26 00000022 8D2E[7201]              	lea bp,[msg]		;Load the offset address of string into BP
+    27 00000026 CD10                    	int 10h				;interrupt
+    28                                  
+    29                                  
+    30                                  ;;printlogo below
+    31                                  
+    32                                  
+    33                                  
+    34                                  ;;logoborder		
+    35 00000028 B0CD                    	mov al, 205		;ascii 'double line'
+    36 0000002A B223                    	mov dl, 35			;sets col to 35
+    37                                  
+    38                                  printtop:				;Loop for top portion of border
+    39 0000002C B402                    	mov ah, 2			;set cursor location
+    40 0000002E B700                    	mov bh, 0			;page=0
+    41 00000030 B37F                    	mov bl,7fh			;color preset
+    42 00000032 B604                    	mov dh, 4			;row, 0..24
+    43 00000034 CD10                    	int 10h				;interrupt
+    44                                  
+    45 00000036 B409                    	mov ah, 09h		;write a char and attribute
+    46 00000038 B700                    	mov bh, 0			;page=0		
+    47 0000003A B90100                  	mov cx, 1			;repetitions 
+    48 0000003D CD10                    	int 10h				;interrupt
+    49                                  
+    50 0000003F FEC2                    	inc dl				;increment col 
+    51 00000041 80FA32                  	cmp dl, 50			;compares col to 50
+    52 00000044 75E6                    	jne printtop
+    53 00000046 CD10                    	int 10h				;interrupt
+    54                                  
+    55 00000048 B223                    	mov dl, 35			;resets col
+    56                                  
+    57                                  printbot:				;Loop for bottom portion of border
+    58 0000004A B402                    	mov ah, 2			;set cursor location
+    59 0000004C B700                    	mov bh, 0			;page=0
+    60 0000004E B608                    	mov dh, 8			;row, 0..24
+    61 00000050 CD10                    	int 10h				;interrupt
+    62                                  
+    63 00000052 B409                    	mov ah, 09h		;write a char and attribute
+    64 00000054 B700                    	mov bh, 0			;page=0		
+    65 00000056 B90100                  	mov cx, 1			;repetitions 
+    66 00000059 CD10                    	int 10h				;interrupt
+    67                                  
+    68 0000005B FEC2                    	inc dl				;increment col 
+    69 0000005D 80FA32                  	cmp dl, 50			;compares col to 50
+    70 00000060 75E8                    	jne printbot		
+    71 00000062 CD10                    	int 10h				;interrupt
+    72                                  
+    73                                  ;;initialize
+    74                                  
+    75 00000064 8D36[C101]              	lea si, [left]		;sets leftside array
+    76 00000068 B604                    	mov dh, 4			;row, 0..24
+    77                                  
+    78                                  printleft:
+    79 0000006A 8A04                    	mov al, [si]		;assigns array
+    80 0000006C B402                    	mov ah, 2			;set cursor location
+    81 0000006E B700                    	mov bh, 0			;page=0
+    82 00000070 B222                    	mov dl, 34			;col set to 34
+    83 00000072 CD10                    	int 10h				;interrupt
+    84                                  
+    85 00000074 B409                    	mov ah, 09h		;write a char and attribute
+    86 00000076 B700                    	mov bh, 0			;page=0		
+    87 00000078 B90100                  	mov cx, 1			;repetitions 
+    88 0000007B CD10                    	int 10h				;interrupt
+    89                                  
+    90 0000007D 46                      	inc si				;increment the array
+    91 0000007E FEC6                    	inc dh				;increment row 
+    92 00000080 80FE09                  	cmp dh, 9			;compare row to 9
+    93 00000083 75E5                    	jne printleft
+    94 00000085 CD0A                    	int 10				;interrupt
+    95                                  
+    96                                  ;;initialize
+    97                                  
+    98 00000087 8D36[C601]              	lea si, [right]	
+    99 0000008B B604                    	mov dh, 4			;row set to 4
+   100                                  
+   101                                  printright:
+   102 0000008D 8A04                    	mov al, [si]		;assigns array
+   103 0000008F B402                    	mov ah, 2			;set cursor location
+   104 00000091 B700                    	mov bh, 0			;page=0
+   105 00000093 B232                    	mov dl, 50			;col set to 50
+   106 00000095 CD10                    	int 10h				;interrupt
+   107                                  
+   108 00000097 B409                    	mov ah, 09h		;write a char and attribute
+   109 00000099 B700                    	mov bh, 0			;page=0		
+   110 0000009B B90100                  	mov cx, 1			;repetitions 
+   111 0000009E CD10                    	int 10h				;interrupt
+   112                                  
+   113 000000A0 46                      	inc si				;increments the array
+   114 000000A1 FEC6                    	inc dh				;increment row 
+   115 000000A3 80FE09                  	cmp dh, 9			;compares row to 9
+   116 000000A6 75E5                    	jne printright
+   117 000000A8 CD0A                    	int 10				;interrupt
+   118                                  
+   119                                  ;;diamondlogo		;diamond logo code
+   120                                  
+   121                                  ;;initialize				
+   122 000000AA 8D36[CB01]              	lea si, [ditop]		;assigns ditop to si		
+   123 000000AE B218                    	mov dl, 24			;col set to 24
+   124                                  
+   125                                  printditop:
+   126 000000B0 8A04                    	mov al, [si]		;sets array
+   127 000000B2 B402                    	mov ah, 2			;set cursor location
+   128 000000B4 B700                    	mov bh, 0			;page=0
+   129 000000B6 B379                    	mov bl, 79h		;white on black
+   130 000000B8 B605                    	mov dh, 5			;row, 0..24
+   131 000000BA CD10                    	int 10h				;interrupt
+   132                                  
+   133 000000BC B409                    	mov ah, 09h		;write a char and attribute
+   134 000000BE B700                    	mov bh, 0			;page=0		
+   135 000000C0 B90100                  	mov cx, 1			;repetitions 
+   136 000000C3 CD10                    	int 10h				;interrupt
+   137 000000C5 46                      	inc si				;increments array
+   138 000000C6 FEC2                    	inc dl				;increment col 
+   139 000000C8 80FA1F                  	cmp dl, 31			;compares col to 31
+   140 000000CB 75E3                    	jne printditop
+   141 000000CD CD10                    	int 10h				;interrupt
+   142                                  
+   143                                  ;;initialize
+   144 000000CF B218                    	mov dl, 24			;col 24
+   145                                  
+   146                                  printdimid:
+   147 000000D1 8A04                    	mov al, [si]		;set array
+   148 000000D3 B402                    	mov ah, 2			;set cursor location
+   149 000000D5 B700                    	mov bh, 0			;page=0
+   150 000000D7 B606                    	mov dh, 6			;row, 0..24
+   151 000000D9 CD10                    	int 10h
+   152                                  
+   153 000000DB B409                    	mov ah, 09h		;write a char and attribute
+   154 000000DD B700                    	mov bh, 0			;page=0		
+   155 000000DF B90100                  	mov cx, 1			;repetitions 
+   156 000000E2 CD10                    	int 10h				;interrupt
+   157 000000E4 46                      	inc si				;increments array
+   158 000000E5 FEC2                    	inc dl				;increment col 
+   159 000000E7 80FA1E                  	cmp dl, 30			;compares col to 30, 1 less because no *
+   160 000000EA 75E5                    	jne printdimid
+   161 000000EC CD10                    	int 10h				;interrupt
+   162                                  
+   163                                  ;;initialize
+   164 000000EE B21A                    	mov dl, 26			;col 0
+   165                                  
+   166                                  printdibot:
+   167 000000F0 8A04                    	mov al, [si]		;sets array
+   168 000000F2 B402                    	mov ah, 2			;set cursor location
+   169 000000F4 B700                    	mov bh, 0			;page=0
+   170 000000F6 B607                    	mov dh, 7			;row, 0..24
+   171 000000F8 CD10                    	int 10h				;interrupt
+   172                                  
+   173 000000FA B409                    	mov ah, 09h		;write a char and attribute
+   174 000000FC B700                    	mov bh, 0			;page=0		
+   175 000000FE B90100                  	mov cx, 1			;repetitions 
+   176 00000101 CD10                    	int 10h				;interrupt
+   177 00000103 46                      	inc si				;increments array
+   178 00000104 FEC2                    	inc dl				;increment col 
+   179 00000106 80FA1C                  	cmp dl, 28			;compares col to 28
+   180 00000109 75E5                    	jne printdibot
+   181                                  
+   182                                  ;;cursor reset
+   183 0000010B B700                    	mov bh, 0
+   184 0000010D B600                    	mov dh,0			;Position on row 0
+   185 0000010F B246                    	mov dl,70			;And column 0
+   186 00000111 B402                    	mov ah, 2
+   187                                  
+   188 00000113 CD10                    	int 10h				;interrupt
+   189                                  
+   190                                  ;; Print date and time
+   191                                  
+   192 00000115 BB0100                  	mov bx, 0x0001            ;s:bx input buffer, temporary set 0x0000:1234
+   193 00000118 8EC3                       	 mov es, bx
+   194 0000011A BB4523                    	  mov bx, 0x2345
+   195 0000011D B402                       	 mov ah, 02h                ;Function 02h (read sector)
+   196 0000011F B001                        	mov al, 1                ;Read one sector
+   197 00000121 B501                        	mov ch, 1                ;Cylinder#
+   198 00000123 B102                        	mov cl, 2               ;Sector# --> 2 has program
+   199 00000125 B600                        	mov dh, 0                ;Head# --> logical sector 1
+   200 00000127 B200                        	mov dl, 0                ;Drive# A, 08h=C
+   201 00000129 CD13                        	int 13h
+   202                                  
+   203 0000012B EA45230100                 	jmp word 0x0001:0x2345   ;Run program on sector 1, ex:bx
+   204                                  
+   205 00000130 0E                      	push cs
+   206 00000131 1F                      	pop ds
+   207                                  	
+   208                                  ;;keyboardinput
+   209 00000132 B400                    	mov ah,0
+   210 00000134 CD16                    	int 16h 
+   211                                  
+   212                                  ;;clearscreen
+   213 00000136 B406                    	mov ah,06h		;Function 06h (scroll screen)
+   214 00000138 B000                    	mov al,0			;Scroll all lines
+   215 0000013A B70A                    	mov bh,0ah		;Attribute (lightgreen on black) 
+   216 0000013C B500                    	mov ch,0			;Upper left row is zero
+   217 0000013E B100                    	mov cl,0			;Upper left column is zero
+   218 00000140 B618                    	mov dh,24			;Lower left row is 24
+   219 00000142 B24F                    	mov dl,79			;Lower left column is 79
+   220 00000144 CD10                    	int 10h				;interrupt
+   221                                  
+   222                                  
+   223                                  ;;load the text file
+   224                                  
+   225 00000146 BB0000                  	mov bx, 0x0000			;es:bx input buffer, temporary set 0x0000:1234
+   226 00000149 8EC3                    	mov es, bx
+   227 0000014B BB3412                  	mov bx, 0x1234
+   228 0000014E B402                    	mov ah, 02h				;Function 02h (read sector)
+   229 00000150 B001                    	mov al, 1				;Read one sector
+   230 00000152 B501                    	mov ch, 1				;Cylinder#
+   231 00000154 B104                    	mov cl, 4				;Sector# --> 2 has program
+   232 00000156 B600                    	mov dh, 0				;Head# --> logical sector 1
+   233 00000158 B200                    	mov dl, 0				;Drive# A, 08h=C
+   234 0000015A CD13                    	int 13h
+   235                                  
+   236                                  ;;print the text file
+   237                                  
+   238 0000015C B413                    	mov ah,13h		;Function 13h (display string), XT machine only
+   239 0000015E B001                    	mov al,1		;Write mode is zero: cursor stay after last char
+   240 00000160 B700                    	mov bh,0		;Use video page of zero
+   241 00000162 B30A                    	mov bl,0ah		;Attribute (lightgreen on black)
+   242 00000164 B96E00                  	mov cx, 110		;Character string length
+   243 00000167 B600                    	mov dh,0		;Position on row 0
+   244 00000169 B200                    	mov dl,0		;And column 0
+   245 0000016B BD3412                  	mov bp, 0x1234	;Load the offset address of string into BP, es:bp
+   246                                  					;Same as mov bp, msg  
+   247 0000016E CD10                    	int 10h
+   248                                  ;;end
+   249 00000170 CD20                    	int 20h
+   250                                  	
+   251                                  
+   252 00000172 4469616D6F6E644F53-     msg db 'DiamondOS, Jad El-Khatib, Version 0.1 (c) Press any key to continue...'
+   253 0000017B 2C204A616420456C2D-
+   254 00000184 4B68617469622C2056-
+   255 0000018D 657273696F6E20302E-
+   256 00000196 312028632920507265-
+   257 0000019F 737320616E79206B65-
+   258 000001A8 7920746F20636F6E74-
+   259 000001B1 696E75652E2E2E     
+   260                                  mlen equ $-msg
+   261                                  
+   262 000001B8 4469616D6F6E644F53      msg2 db 'DiamondOS'
+   263                                  mlen2 equ $-msg2
+   264                                  
+   265                                  
+   266 000001C1 C9BABABAC8              left	db 201,186,186,186,200
+   267 000001C6 BBBABABABC              right	db	187,186,186,186,188
+   268 000001CB 2FCDCDCDCD5C2A5C20-     ditop 	db	47,205,205,205,205,92,42,92,32,45,45,32,47,92,47
+   269 000001D4 2D2D202F5C2F       
+   270 000001DA 5CCD2F                  dibot	db	92,205,47
+   271                                  
+   272                                  
+   273 000001DD 00<rept>                padding	times 510-($-$$) db 0		;to make MBR 512 bytes
+   274 000001FE 55AA                    bootSig	db 0x55, 0xaa		;signature 
+   275                                  
